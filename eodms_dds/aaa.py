@@ -3,8 +3,7 @@ from requests.packages import urllib3
 import ssl
 import os
 import json
-# import time
-from datetime import datetime, timedelta
+from datetime import timedelta, datetime
 import dateparser
 
 from . import log
@@ -12,8 +11,8 @@ from . import log
 ssl._create_default_https_context = ssl._create_unverified_context
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-class AAA_Creds():
 
+class AAA_Creds:
     def __init__(self):
 
         self.access_token = None
@@ -25,7 +24,8 @@ class AAA_Creds():
 
         self.cred_fn = None
 
-        self.logger = log._EODMSLogger('EODMS_AAA', log.eodms_logger)
+        log._EODMSLogger("EODMS_AAA", log.eodms_logger)
+        self.logger = log._EODMSLogger("EODMS_AAA", log.eodms_logger)
 
     def get_json(self, with_seconds=False):
         """
@@ -44,15 +44,15 @@ class AAA_Creds():
             "access_token": self.access_token,
             "refresh_token": self.refresh_token,
             "access_expiration": access_str,
-            "refresh_expiration": refresh_str
+            "refresh_expiration": refresh_str,
         }
 
         if with_seconds:
-            out_json['access_seconds'] = self.access_seconds
-            out_json['refresh_seconds'] = self.refresh_seconds
+            out_json["access_seconds"] = self.access_seconds
+            out_json["refresh_seconds"] = self.refresh_seconds
 
         return out_json
-    
+
     def set_vals(self, **kwargs):
         """
         Sets one or multiple variables.
@@ -66,29 +66,29 @@ class AAA_Creds():
             - refresh_seconds
         """
 
-        if kwargs.get('access_token') is not None:
-            self.logger.info("Updating Access Token...")
-            self.access_token = kwargs.get('access_token')
+        if kwargs.get("access_token") is not None:
+            self.logger.debug("Updating Access Token...")
+            self.access_token = kwargs.get("access_token")
 
-        if kwargs.get('refresh_token') is not None:
-            self.logger.info("Updating Refresh Token...")
-            self.refresh_token = kwargs.get('refresh_token')
+        if kwargs.get("refresh_token") is not None:
+            self.logger.debug("Updating Refresh Token...")
+            self.refresh_token = kwargs.get("refresh_token")
 
-        if kwargs.get('access_exp') is not None:
-            dt = kwargs.get('access_exp')
-            self.logger.info(f"Updating Access Expiration as {dt}...")
+        if kwargs.get("access_exp") is not None:
+            dt = kwargs.get("access_exp")
+            self.logger.debug(f"Updating Access Expiration as {dt}...")
             self.access_exp = dt
 
-        if kwargs.get('refresh_exp') is not None:
-            dt = kwargs.get('refresh_exp')
-            self.logger.info(f"Updating Refresh Expiration as {dt}...")
+        if kwargs.get("refresh_exp") is not None:
+            dt = kwargs.get("refresh_exp")
+            self.logger.debug(f"Updating Refresh Expiration as {dt}...")
             self.refresh_exp = dt
 
-        if kwargs.get('access_seconds') is not None:
-            self.access_seconds = kwargs.get('access_seconds')
+        if kwargs.get("access_seconds") is not None:
+            self.access_seconds = kwargs.get("access_seconds")
 
-        if kwargs.get('refresh_seconds') is not None:
-            self.refresh_seconds = kwargs.get('refresh_seconds')
+        if kwargs.get("refresh_seconds") is not None:
+            self.refresh_seconds = kwargs.get("refresh_seconds")
 
     def set_fn(self, fn):
         """
@@ -107,9 +107,9 @@ class AAA_Creds():
 
         if as_dt:
             return dateparser.parse(self.access_exp)
-        
+
         return self.access_exp
-    
+
     def get_refresh_exp(self, as_dt=True):
         """
         Returns the Refresh Token expiration time.
@@ -120,7 +120,7 @@ class AAA_Creds():
 
         if as_dt:
             return dateparser.parse(self.refresh_exp)
-        
+
         return self.refresh_exp
 
     def export_vals(self):
@@ -128,7 +128,7 @@ class AAA_Creds():
         Exports the credential values to the aaa_creds.json file.
         """
 
-        with open(self.cred_fn, 'w') as f:
+        with open(self.cred_fn, "w") as f:
             json.dump(self.get_json(), f)
 
     def import_vals(self):
@@ -139,25 +139,24 @@ class AAA_Creds():
         if not os.path.exists(self.cred_fn):
             return None
 
-        with open(self.cred_fn, 'r') as file:
+        with open(self.cred_fn, "r") as file:
             creds = json.load(file)
 
-        self.access_token = creds.get('access_token')
-        self.refresh_token = creds.get('refresh_token')
-        
-        access_exp_str = creds.get('access_expiration')
-        refresh_exp_str = creds.get('refresh_expiration')
+        self.access_token = creds.get("access_token")
+        self.refresh_token = creds.get("refresh_token")
+
+        access_exp_str = creds.get("access_expiration")
+        refresh_exp_str = creds.get("refresh_expiration")
 
         self.access_exp = datetime.fromisoformat(access_exp_str)
-        self.refresh_exp = datetime.fromisoformat(refresh_exp_str) \
-                            if refresh_exp_str is not None else datetime.now()
+        self.refresh_exp = datetime.fromisoformat(refresh_exp_str) if refresh_exp_str is not None else datetime.now()
 
-        self.logger.info(f"Access Expiration: {self.access_exp}")
-        self.logger.info(f"Refresh Expiration: {self.refresh_exp}")
+        self.logger.debug(f"Access Expiration: {self.access_exp}")
+        self.logger.debug(f"Refresh Expiration: {self.refresh_exp}")
 
-class AAA_API():
 
-    def __init__(self, username, password, environment='prod'):
+class AAA_API:
+    def __init__(self, username, password, environment="prod"):
 
         self.aaa_creds = AAA_Creds()
 
@@ -166,9 +165,9 @@ class AAA_API():
 
         self.domain = "https://www.eodms-sgdot.nrcan-rncan.gc.ca"
 
-        user_folder = os.path.expanduser('~')
-        self.auth_folder = os.path.join(user_folder, '.eodms')
-        self.aaa_creds.set_fn(os.path.join(self.auth_folder, 'aaa_creds.json'))
+        user_folder = os.path.expanduser("~")
+        self.auth_folder = os.path.join(user_folder, ".eodms")
+        self.aaa_creds.set_fn(os.path.join(self.auth_folder, "aaa_creds.json"))
 
         if not os.path.exists(self.auth_folder):
             os.makedirs(self.auth_folder)
@@ -176,11 +175,13 @@ class AAA_API():
         self.login_success = True
         self.response = None
 
-        self.logger = log.EODMSLogger('EODMS_AAA', log.eodms_logger)
+        self.logger = log._EODMSLogger("EODMS_AAA", log.eodms_logger)
+
+        # self.logger = logging.getLogger("Test4")
 
     def get_access_token(self):
         """
-        Gets a new Access Token using either an existing Access Token, 
+        Gets a new Access Token using either an existing Access Token,
             the "refresh" endpoint or "login"
             depending on the expiration dates of the current tokens.
 
@@ -202,35 +203,32 @@ class AAA_API():
         refresh_exp = self.aaa_creds.refresh_exp
 
         if now_dt >= access_exp and now_dt >= refresh_exp:
-            self.logger.info("Current Refresh Token has expired. "
-                  "Getting new Tokens...")
+            self.logger.debug("Current Refresh Token has expired. " "Getting new Tokens...")
 
             # Get a new token
             self._login()
         elif now_dt >= access_exp and now_dt < refresh_exp:
-            self.logger.info("Current Access Token has expired. "
-                  "Getting a new Access Token using current Refresh Token...")
+            self.logger.debug("Current Access Token has expired. " "Getting a new Access Token using current Refresh Token...")
 
             self._refresh()
 
         if not self.login_success:
-            self.logger.warning("WARNING: Could not access current AAA "
-                  f"session with existing tokens in {self.aaa_creds.cred_fn}")
-            
+            self.logger.warning("WARNING: Could not access current AAA " f"session with existing tokens in {self.aaa_creds.cred_fn}")
+
         self._print_response()
 
         return self.aaa_creds.access_token
-    
-    def prepare_request(self, url, method='GET', **kwargs):
+
+    def prepare_request(self, url, method="GET", **kwargs):
 
         req = requests.Request(method, url, **kwargs)
         prepared = req.prepare()
-        
+
         # Send the request
         session = requests.Session()
         session.trust_env = False
         response = session.send(prepared)
-        # self.logger.debug(f"response.json:\n{json.dumps(response.json(), indent=4)}")
+        self.logger.debug(f"response.json:\n{json.dumps(response.json(), indent=4)}")
 
         return response
 
@@ -248,47 +246,43 @@ class AAA_API():
     def _update_tokens(self, **kwargs):
 
         # Determine the expiration times
-        refresh_time = self.response.get('refresh_token_expires_in') - 180
-        access_time = self.response.get('expires_in') - 120
+        refresh_time = self.response.get("refresh_token_expires_in") - 180
+        access_time = self.response.get("expires_in") - 120
         now_dt = datetime.now()
         self.access_exp = now_dt + timedelta(seconds=access_time)
         self.refresh_exp = now_dt + timedelta(seconds=refresh_time)
 
         kwargs["access_exp"] = self.access_exp
         kwargs["refresh_exp"] = self.refresh_exp
-        kwargs["access_seconds"] = self.response.get('refresh_token_expires_in')
-        kwargs["refresh_seconds"] = self.response.get('expires_in')
+        kwargs["access_seconds"] = self.response.get("refresh_token_expires_in")
+        kwargs["refresh_seconds"] = self.response.get("expires_in")
 
         # self.aaa_creds.set_vals(access_exp=self.access_exp,
         #                         refresh_exp=self.refresh_exp)
-        
-        self.aaa_creds.set_vals(**kwargs)    
+
+        self.aaa_creds.set_vals(**kwargs)
         self.aaa_creds.export_vals()
 
     def _login(self):
         """
-        Starts a new session using the "login" endpoint of the AAA API 
+        Starts a new session using the "login" endpoint of the AAA API
             and gets the Access Token.
         """
 
         url = f"{self.domain}/aaa/v1/login"
 
-        payload = {
-            "grant_type": "password",
-            "password": self.password,
-            "username": self.username
-        }
+        payload = {"grant_type": "password", "password": self.password, "username": self.username}
 
         # resp = requests.post(url, json=payload, trust_env=False, verify=False) #, verify=False)
         resp = self.prepare_request(url, "POST", json=payload)
 
         if resp.status_code == 200:
-            self.logger.info("Successfully logged in using AAA API")
+            self.logger.debug("Successfully logged in using AAA API")
 
             self.response = resp.json()
 
-            new_access_token = self.response.get('access_token')
-            new_refresh_token = self.response.get('refresh_token')
+            new_access_token = self.response.get("access_token")
+            new_refresh_token = self.response.get("refresh_token")
             # new_access_exp = self.access_exp.isoformat()
 
             # try:
@@ -296,27 +290,24 @@ class AAA_API():
             # except:
             #     new_refresh_exp = ""
 
-            self._update_tokens(access_token=new_access_token,
-                                refresh_token=new_refresh_token)
+            self._update_tokens(access_token=new_access_token, refresh_token=new_refresh_token)
 
             self.login_success = True
 
         else:
             err_json = resp.json()
-            error = err_json.get('error')
-            msg = err_json.get('message')
-            self.logger.warning(f"WARNING: Failed to log in using "
-                  f"AAA API: {error}: {msg}")
+            error = err_json.get("error")
+            msg = err_json.get("message")
+            self.logger.warning(f"WARNING: Failed to log in using " f"AAA API: {error}: {msg}")
             self.login_success = False
 
             if resp.status_code == 429:
-                self.logger.info("Attempting to get new Access Token "
-                      "using existing Refresh Token...")
+                self.logger.debug("Attempting to get new Access Token " "using existing Refresh Token...")
                 self._refresh()
 
     def _refresh(self):
         """
-        Gets a new Access Token using an existing Refresh Token 
+        Gets a new Access Token using an existing Refresh Token
             and the "refresh" endpoint of the AAA API.
         """
 
@@ -330,23 +321,18 @@ class AAA_API():
         resp = self.prepare_request(url, headers=headers)
 
         if resp.status_code == 200:
-            self.logger.info("Successfully refreshed using AAA API")
+            self.logger.debug("Successfully refreshed using AAA API")
             self.response = resp.json()
 
-            new_access_token = self.response.get('access_token')
-            new_refresh_token = self.response.get('refresh_token')
+            new_access_token = self.response.get("access_token")
+            new_refresh_token = self.response.get("refresh_token")
 
-            self._update_tokens(access_token=new_access_token,
-                                refresh_token=new_refresh_token)
+            self._update_tokens(access_token=new_access_token, refresh_token=new_refresh_token)
 
             self.login_success = True
         else:
             err_json = resp.json()
-            error = err_json.get('error')
-            msg = err_json.get('message')
-            self.logger.error("WARNING: Failed to refresh using "
-                  f"AAA API: {error}: {msg}")
+            error = err_json.get("error")
+            msg = err_json.get("message")
+            self.logger.error("WARNING: Failed to refresh using " f"AAA API: {error}: {msg}")
             self.login_success = False
-
-
-        

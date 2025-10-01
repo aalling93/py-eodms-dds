@@ -4,6 +4,8 @@ eodms_rapi/__pycache__/
 *.py[cod]
 *$py.class
 
+old*
+
 # Distribution / packaging
 _deploy_testpypi.bat
 _deploy_pypi.bat
